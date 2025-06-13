@@ -1,0 +1,8 @@
+cargo run --release --manifest-path bench/Cargo.toml
+AES-SIV Encrypt avg: 0.134099s
+AES-SIV Decrypt avg: 0.133664s
+XChaCha20-Poly1305 Encrypt avg: 0.321946s
+XChaCha20-Poly1305 Decrypt avg: 0.319210s
+AES-SIV is faster at encryption by 0.187847s
+AES-SIV is faster at decryption by 0.185546s
+Total benchmark time: 91.023153s
