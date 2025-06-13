@@ -1,4 +1,17 @@
-# 
+# aes-gcm_vs_chacha20-poly1305
+## Caveat(s)
+Intermediate Observation:
+
+
+| Language / Library | Faster Cipher(s)                            | Slower Cipher(s)                            |
+|--------------------|---------------------------------------------|---------------------------------------------|
+| OpenSSL            | AES-256-GCM                                 | ChaCha20-Poly1305                           |
+| Python             | ChaCha20-Poly1305                           | AES-256-GCM                                 |
+| Go (Golang)        | AES-256-GCM                                 | ChaCha20-Poly1305                           |
+| Rust               | ChaCha20-Poly1305<br>AES-SIV                | AES-256-GCM<br>XChaCha20-Poly1305           |
+
+
+General claims
 
 | Cipher            | Speed (Encrypt) | Speed (Decrypt) | Notes                          |
 | ----------------- | --------------- | --------------- | ------------------------------ |
