@@ -1,0 +1,8 @@
+cargo run --release --manifest-path bench/Cargo.toml
+AES-GCM         Encrypt avg: 0.646638s
+AES-GCM         Decrypt avg: 0.647296s
+ChaCha20-Poly1305 Encrypt avg: 0.322531s
+ChaCha20-Poly1305 Decrypt avg: 0.319666s
+ChaCha20-Poly1305 is faster at encryption by 0.324108s
+ChaCha20-Poly1305 is faster at decryption by 0.327630s
+Total benchmark time: 193.744841s
