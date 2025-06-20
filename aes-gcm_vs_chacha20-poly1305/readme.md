@@ -52,6 +52,27 @@ AES-GCM is faster than ChaCha20-Poly1305 by: 0.080577s
 Total time: 22.657542s
 ```
 
+**Note**:
+```
+Go's crypto/aes package automatically leverages AES-NI (Advanced Encryption Standard New Instructions) on systems with compatible hardware, such as AMD64 systems with AES-NI extensions and s390x systems with Message-Security-Assist extensions. This hardware acceleration significantly improves the performance of AES encryption and decryption operations.
+
+Key points regarding AES-NI in Go:
+
+Automatic Detection:
+The Go runtime automatically detects the presence of AES-NI support on the underlying hardware.
+Performance Enhancement:
+
+When AES-NI is available, the crypto/aes package utilizes these specialized instructions, leading to substantial performance gains compared to software-only implementations.
+
+Constant-Time Operations:
+On systems with AES-NI, AES operations (and GHASH in GCM mode) are performed in constant time, which helps mitigate timing-based side-channel attacks.
+
+No Manual Configuration:
+Developers do not need to explicitly enable or configure AES-NI in their Go code; the crypto/aes package handles this transparently.
+
+In essence, if the system running a Go application has AES-NI enabled, the crypto/aes package will automatically benefit from the hardware acceleration, providing faster and more secure AES operations without any additional effort from the developer.
+```
+
 ``` openssl
  Outputs time per operation for block sizes (16, 64, 256, 1024, 8192 bytes).
 # Use openssl version to ensure ≥1.1.0 for chacha20-poly1305 support.
