@@ -1,8 +1,7 @@
 | Feature / Aspect           | **AES-GCM**                                                                 | **AES-XTS**                                                                 |
 |-----------------------------|-----------------------------------------------------------------------------|------------------------------------------------------------------------------|
 | **NIST Approval**           | NIST-approved (SP 800-38D). Widely standardized for authenticated encryption. | NIST-approved for storage encryption (SP 800-38E). Specifically designed for disk/file encryption. |
-| **Mode Type**               | Authenticated Encryption with Associated Data (AEAD). Provides confidentiality + integrity. | Tweakable block cipher mode. Provides confidentiality, but **not integrity** (no authentication). |
-| **Authentication**          | Built-in authentication tag (integrity + authenticity guaranteed).         | No authentication; must combine with HMAC/MAC for tamper protection. |
+| **Authentication**          | Built-in authentication tag (integrity + authenticity guaranteed). Authenticated Encryption with Associated Data (AEAD). Provides confidentiality + integrity.         | No authentication; must combine with HMAC/MAC for tamper protection. Tweakable block cipher mode. Provides confidentiality, but **not integrity** (no authentication). |
 | **Parallelism**             | Parallelizable (encrypt/decrypt + GHASH). Suited for multicore CPUs.       | Highly parallelizable (each sector independent). Well-suited for random-access storage. |
 | **Encryption Size Limit**   | Limited to ~64 GiB per key/IV pair (2^39−256 bits).                        | Extremely large: up to ~2^120 blocks (virtually unlimited). |
 | **Random Access**           | Poor fit — requires sequential nonce management. Random access risks nonce reuse. | Excellent fit — each sector/block encrypted independently using tweak = sector number. |
