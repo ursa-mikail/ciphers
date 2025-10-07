@@ -32,14 +32,13 @@ Sweet spot:
 - Allows 16 MiB maximum sector and simple hardware design.
 - It’s therefore a design-level engineering constant, not a law of nature.
 
-
 ### Deciding “how small is small enough”
 
 When the P1619 working group and NIST’s SP 800-38E editors formalized XTS, they needed a bound small enough that even in worst-case use, the total risk would remain cryptographically negligible.
 
 They targeted:
 
-	residual probability ≤ $\ 2^{-88} \$
+residual probability ≤ $\ 2^{-88} \$
 
 It’s 40 bits below AES-128’s baseline 128-bit strength, which is:
 
@@ -50,6 +49,10 @@ Formally, it means:
 
 > even if you encrypt the largest allowed sector (16 MiB, = 2²⁰ blocks),
 > the distinguishing advantage contributed by intra-sector collisions is ≤ 2⁻⁸⁸.
+
+That bound keeps XTS’s total security level effectively at ≈ 128 bits – 0 bits for realistic use.
+
+---
 
 ## 16 MiB maximum sector
 
