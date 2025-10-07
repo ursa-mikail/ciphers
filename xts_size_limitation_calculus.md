@@ -61,6 +61,7 @@ That bound keeps XTS’s total security level effectively at ≈ 128 bits – 0 
 They wanted a nice round power-of-2 number of blocks per sector that would:
 
 > make hardware counters simple (20 bits);
+
 > keep $\ \frac{n^2}{2^128} \$ ≤ 2⁻⁸⁸.
 
 Solve:
