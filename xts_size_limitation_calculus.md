@@ -54,6 +54,18 @@ That bound keeps XTS’s total security level effectively at ≈ 128 bits – 0 
 
 ---
 
+𝑛 = number of AES 16-byte blocks in a single data unit (aka sector, tweak domain) that you encrypt under one tweak.
+
+If the data unit is 𝐿 bytes long, then (after padding to a multiple of 16 bytes)
+
+𝑛 = 
+$\ \frac{L}{16} \$
+
+Rules: 
+- 𝑛 must be an integer, 𝑛 ≥ 1, and by the XTS spec 𝑛 ≤
+$\ 2^{20} \$
+.
+
 ## 16 MiB maximum sector
 
 ### Numeric reasoning behind the 40-bit margin
@@ -108,7 +120,9 @@ $\ Advantage <= \frac{q^2}{2^k} + \frac{n^2}{2^b} \$
 | (n)    | number of blocks within one data unit (sector) |
 
 
-The second term, $\ \frac{n^2}{2^128} \$ , measures the probability that two blocks within the same data unit collide in whitening value or otherwise reveal a structural relation.
+The 2nd term, 
+$\ \frac{n^2}{2^128} \$ 
+, measures the probability that 2 blocks within the same data unit collide in whitening value or otherwise reveal a structural relation.
 
 ---
 
