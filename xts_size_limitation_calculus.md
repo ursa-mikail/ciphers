@@ -77,7 +77,12 @@ They wanted a nice round power-of-2 number of blocks per sector that would:
 > keep $\ \frac{n^2}{2^{128}} ≤ 2^{-88} \$ 
 
 Solve:
-$\ \frac{n^2}{2^{128}} = 2^{-88} => n = 2^{20} \$
+$\ \frac{n^2}{2^{128}} = 2^{-88} => n <= 2^{20} \$
+
+Thus the spec chooses 
+$\ 𝑛_{max} \$
+⁡$\ 2^{20} \$
+ blocks.
 
 That gives 
 $\ 2^{20} \$ 
@@ -121,8 +126,28 @@ $\ Advantage <= \frac{q^2}{2^k} + \frac{n^2}{2^b} \$
 
 
 The 2nd term, 
-$\ \frac{n^2}{2^128} \$ 
+$\ \frac{n^2}{2^{128}} \$ 
 , measures the probability that 2 blocks within the same data unit collide in whitening value or otherwise reveal a structural relation.
+
+---
+
+The inequality 
+$\ \frac{n^2}{2^{128}} \$ 
+≤
+$\ {2^{-88}} \$ 
+ leads directly to 
+$\ 2^{20} \$
+.
+
+That gives the 16 MiB per data unit cap (because 
+$\ 2^{20} \$
+ blocks × 16 B = 
+$\ 2^{24} \$
+ B).
+
+The cap is deliberately conservative: it protects the security proof bounds and simplifies implementations (20-bit block index, 24-bit byte index), while producing an astronomically small collision/distinguishing probability.
+
+![calculus_01](calculus_01.png)
 
 ---
 
