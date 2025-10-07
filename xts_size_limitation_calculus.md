@@ -1,3 +1,5 @@
+# The Space Limitation Of XTS
+
 ## 2⁻⁸⁸ threshold 
 
 The 2⁻⁸⁸ threshold (2⁻⁸⁸ was chosen as the safety threshold in AES-XTS (IEEE P1619 / NIST SP 800-38E)) was the design target probability that the XTS designers used to define a safe maximum data-unit size (2²⁰ blocks = 16 MiB).
@@ -68,7 +70,7 @@ Rules:
 $\ 2^{20} \$
 .
 
-## 16 MiB maximum sector
+## 16 MB maximum sector
 
 ### Numeric reasoning behind the 40-bit margin
 
@@ -123,9 +125,15 @@ $\ 2^{-48} \$
 | **Maximum**            | 16 MiB (2²⁴ bytes) | keeps `n² / 2¹²⁸ ≤ 2⁻⁸⁸`; fits 24-bit counter; avoids field wrap; spec mandate |
 | **Typical sector**     | 512 B–4 KiB        | well inside bound                                                              |
 | **Global tweak space** | 2¹²⁸ sectors       | determined by 128-bit tweak                                                    |
----
 
 ![calculus_00](calculus_00.png)
+
+✅ Summary
+
+The 16 MiB figure isn’t arbitrary: it’s chosen so that the probability of internal whitening collisions or proof-bound degradation remains below 2⁻⁸⁸, while keeping implementation counters and field operations simple.
+
+It’s large enough for any realistic “sector” yet small enough to guarantee both mathematical and engineering safety margins.
+
 
 --- 
 
