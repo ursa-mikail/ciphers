@@ -61,6 +61,8 @@ If the data unit is 𝐿 bytes long, then (after padding to a multiple of 16 byt
 𝑛 = 
 $\ \frac{L}{16} \$
 
+![calculus_03](calculus_03.png)
+
 Rules: 
 - 𝑛 must be an integer, 𝑛 ≥ 1, and by the XTS spec 𝑛 ≤
 $\ 2^{20} \$
@@ -75,6 +77,8 @@ They wanted a nice round power-of-2 number of blocks per sector that would:
 > make hardware counters simple (20 bits);
 
 > keep $\ \frac{n^2}{2^{128}} ≤ 2^{-88} \$ 
+
+![calculus_02](calculus_02.png)
 
 Solve:
 $\ \frac{n^2}{2^{128}} = 2^{-88} => n <= 2^{20} \$
@@ -131,6 +135,8 @@ $\ \frac{n^2}{2^{128}} \$
 
 ---
 
+![calculus_01](calculus_01.png)
+
 The inequality 
 $\ \frac{n^2}{2^{128}} \$ 
 ≤
@@ -145,11 +151,15 @@ $\ 2^{20} \$
 $\ 2^{24} \$
  B).
 
-The cap is deliberately conservative: it protects the security proof bounds and simplifies implementations (20-bit block index, 24-bit byte index), while producing an astronomically small collision/distinguishing probability.
+The cap is deliberately conservative: it protects the security proof bounds and simplifies implementations (20-bit block index, 24-bit byte index), while producing an astronomically small collision/distinguishing probability. It yields small implementation counters (20 block bits / 24 byte bits), simplifying hardware/software.
+
+It provides an engineering margin well above real sector sizes (512 B–4 KiB) while keeping formal cryptographic bounds conservative.
 
 ![calculus_01](calculus_01.png)
 
 ---
+
+
 
 $\ 2^{20} \$
 
