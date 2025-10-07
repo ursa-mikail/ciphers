@@ -1,6 +1,6 @@
 ## 2⁻⁸⁸ threshold 
 
-The 2⁻⁸⁸ threshold was the design target probability that the XTS designers used to define a safe maximum data-unit size (2²⁰ blocks = 16 MiB).
+The 2⁻⁸⁸ threshold (2⁻⁸⁸ was chosen as the safety threshold in AES-XTS (IEEE P1619 / NIST SP 800-38E)) was the design target probability that the XTS designers used to define a safe maximum data-unit size (2²⁰ blocks = 16 MiB).
 
 It ensures each sector’s internal structure contributes no more than a 2⁻⁸⁸ degradation to AES-128’s overall 128-bit security.
 
@@ -32,13 +32,46 @@ Sweet spot:
 - Allows 16 MiB maximum sector and simple hardware design.
 - It’s therefore a design-level engineering constant, not a law of nature.
 
+
+### Deciding “how small is small enough”
+
+When the P1619 working group and NIST’s SP 800-38E editors formalized XTS, they needed a bound small enough that even in worst-case use, the total risk would remain cryptographically negligible.
+
+They targeted:
+
+	residual probability ≤ $\ 2^{-88} \$
+
+It’s 40 bits below AES-128’s baseline 128-bit strength, which is:
+
+- so small it’s astronomically unlikely in practice, yet
+- not so extreme that it prevents practical 20-bit counters and 16 MiB sectors.
+
+Formally, it means:
+
+> even if you encrypt the largest allowed sector (16 MiB, = 2²⁰ blocks),
+> the distinguishing advantage contributed by intra-sector collisions is ≤ 2⁻⁸⁸.
+
 ## 16 MiB maximum sector
 
 
 --- 
-
-
-$\ 2^20 \$
+## Structure of the XTS security proof
 
 $\ Advantage <= \frac{q^2}{2^k} + \frac{n^2}{2^b} \$
+
+| Symbol | Meaning                                        |
+| ------ | ---------------------------------------------- |
+| (k)    | AES key size (128 bits)                        |
+| (b)    | AES block size (128 bits)                      |
+| (q)    | total number of AES invocations under one key  |
+| (n)    | number of blocks within one data unit (sector) |
+
+
+The second term, $\ \frac{n^2}{2^128} \$ , measures the probability that two blocks within the same data unit collide in whitening value or otherwise reveal a structural relation.
+
+---
+
+$\ 2^{20} \$
+
+
 
