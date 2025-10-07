@@ -64,6 +64,8 @@ They wanted a nice round power-of-2 number of blocks per sector that would:
 
 * keep $\ \frac{n^2}{2^128} \$ ≤ 2⁻⁸⁸.
 
+> $\ Advantage <= \frac{q^2}{2^k} + \frac{n^2}{2^b} \$
+
 Solve:
 
 $\ \frac{n^2}{2^128} \$ = 2⁻⁸⁸ => n = $\ 2^{20} \$
