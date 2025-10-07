@@ -56,6 +56,21 @@ That bound keeps XTS’s total security level effectively at ≈ 128 bits – 0 
 
 ## 16 MiB maximum sector
 
+### Numeric reasoning behind the 40-bit margin
+
+They wanted a nice round power-of-2 number of blocks per sector that would:
+
+> make hardware counters simple (20 bits);
+> keep $\ \frac{n^2}{2^128} \$ ≤ 2⁻⁸⁸.
+
+Solve:
+
+$\ \frac{n^2}{2^128} \$ = 2⁻⁸⁸ => n = $\ 2^{20} \$
+
+That gives $\ 2^{20} \$ blocks × 16 bytes = 16 MiB.
+So 16 MiB naturally falls out of that $\ 2^{-88} \$ target.
+In other words, the bound 2⁻⁸⁸ caused the 16 MiB cap, not the other way around.
+
 
 --- 
 ## Structure of the XTS security proof
