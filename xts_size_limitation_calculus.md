@@ -62,7 +62,7 @@ They wanted a nice round power-of-2 number of blocks per sector that would:
 
 > make hardware counters simple (20 bits);
 
-> keep $\ \frac{n^2}{2^128} \$ ≤ 2⁻⁸⁸.
+* keep $\ \frac{n^2}{2^128} \$ ≤ 2⁻⁸⁸.
 
 Solve:
 
