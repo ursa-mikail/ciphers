@@ -80,6 +80,8 @@ That’s the expected distinguishing or collision probability bound for a single
 
 Even if you encrypted, say, $\ 2^{40} \$ data units (a trillion terabyte-scale sectors), the union-bound total failure probability remains under $\ 2^{-48} \$ — still microscopic.
 
+![calculus_00](calculus_00.png)
+
 --- 
 ## Structure of the XTS security proof
 
