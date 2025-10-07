@@ -70,17 +70,28 @@ $\ \frac{n^2}{2^{128}} = 2^{-88} => n = 2^{20} \$
 That gives 
 $\ 2^{20} \$ 
 blocks × 16 bytes = 16 MiB.
-So 16 MiB naturally falls out of that $\ 2^{-88} \$ target.
-In other words, the bound 2⁻⁸⁸ caused the 16 MiB cap, not the other way around.
+So 16 MiB naturally falls out of that 
+$\ 2^{-88} \$ 
+target.
+In other words, the bound 
+$\ 2^{-88} \$ 
+caused the 16 MiB cap, not the other way around.
 
 
-For 𝑛 = $\ 2^{20} \$ :
+For 𝑛 = 
+$\ 2^{20} \$ 
+:
 
-$\ \frac{n^2}{2^{128}}  = \frac{2^{40}}{2^{128}} = 2^{-88} \$ ≈ 3.2 × 10^{−27}
+$\ \frac{n^2}{2^{128}}  = \frac{2^{40}}{2^{128}} = 2^{-88} \$ 
+≈ 3.2 × 10^{−27}
 
 That’s the expected distinguishing or collision probability bound for a single data unit.
 
-Even if you encrypted, say, $\ 2^{40} \$ data units (a trillion terabyte-scale sectors), the union-bound total failure probability remains under $\ 2^{-48} \$ — still microscopic.
+Even if you encrypted, say, 
+$\ 2^{40} \$ 
+data units (a trillion terabyte-scale sectors), the union-bound total failure probability remains under 
+$\ 2^{-48} \$ 
+— still microscopic.
 
 ![calculus_00](calculus_00.png)
 
