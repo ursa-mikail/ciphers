@@ -90,7 +90,9 @@ $\ 𝑛_{max} \$
 
 That gives 
 $\ 2^{20} \$ 
-blocks × 16 bytes = 16 MiB.
+blocks × 16 bytes = 
+$\ 2^{24} \$ 
+B = 16 MB.
 So 16 MiB naturally falls out of that 
 $\ 2^{-88} \$ 
 target.
@@ -119,14 +121,30 @@ $\ 2^{-48} \$
 --- 
 ## Structure of the XTS security proof
 
+### Where the numeric bound comes from
+
+Field-size mathematics
+
+Within 
+$\ 𝐺𝐹(2^{128}) \$
+, there are 
+$\ 2^{128} - 1 \$
+ non-zero elements. Mathematically we could multiply by 𝛼 up to 
+$\ 2^{128} - 1 \$ 
+times before wrapping.
+
+So there’s no pure algebraic necessity to stop at 2²⁰ blocks.
+The cap is a cryptographic-engineering bound, not a field-math bound.
+
+
 $\ Advantage <= \frac{q^2}{2^k} + \frac{n^2}{2^b} \$
 
 | Symbol | Meaning                                        |
 | ------ | ---------------------------------------------- |
 | (k)    | AES key size (128 bits)                        |
 | (b)    | AES block size (128 bits)                      |
-| (q)    | total number of AES invocations under one key  |
-| (n)    | number of blocks within one data unit (sector) |
+| (q)    | total number of AES invocations under 1 key    |
+| (n)    | number of blocks within 1 data unit (sector)   |
 
 
 The 2nd term, 
@@ -149,7 +167,12 @@ That gives the 16 MiB per data unit cap (because
 $\ 2^{20} \$
  blocks × 16 B = 
 $\ 2^{24} \$
- B).
+ B) ≈256 MB.
+
+ If we let 𝑛 rise, the bound worsens quadratically: n = 
+ $\ 2^{24} \$
+ , we already lose 8 bits of margin (≈2⁻⁸⁰).
+ 2²⁰ was chosen as a round, safe power-of-2 that keeps the bound under 2⁻⁸⁸ even in the worst case.
 
 The cap is deliberately conservative: it protects the security proof bounds and simplifies implementations (20-bit block index, 24-bit byte index), while producing an astronomically small collision/distinguishing probability. It yields small implementation counters (20 block bits / 24 byte bits), simplifying hardware/software.
 
