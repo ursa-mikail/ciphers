@@ -38,5 +38,7 @@ Sweet spot:
 --- 
 
 
-\$ 2^20 $\
+$\ 2^20 \$
+
+$\ Advantage <= \frac{q^2}{2^k} + \frac{n^2}{2^b} \$
 
