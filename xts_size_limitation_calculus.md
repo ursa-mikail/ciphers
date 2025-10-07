@@ -116,7 +116,15 @@ data units (a trillion terabyte-scale sectors), the union-bound total failure pr
 $\ 2^{-48} \$ 
 — still microscopic.
 
-![calculus_00](calculus_00.png)
+[calculus_00](calculus_00.png)
+
+
+| Limit type             | Value              | Reason                                                                         |
+| ---------------------- | ------------------ | ------------------------------------------------------------------------------ |
+| **Minimum**            | 16 bytes           | must have ≥ 1 AES block                                                        |
+| **Maximum**            | 16 MiB (2²⁴ bytes) | keeps `n² / 2¹²⁸ ≤ 2⁻⁸⁸`; fits 24-bit counter; avoids field wrap; spec mandate |
+| **Typical sector**     | 512 B–4 KiB        | well inside bound                                                              |
+| **Global tweak space** | 2¹²⁸ sectors       | determined by 128-bit tweak                                                    |
 
 --- 
 ## Structure of the XTS security proof
