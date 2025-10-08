@@ -122,7 +122,7 @@ $\ 2^{-48} \$
 | Limit type             | Value              | Reason                                                                         |
 | ---------------------- | ------------------ | ------------------------------------------------------------------------------ |
 | **Minimum**            | 16 bytes           | must have ≥ 1 AES block                                                        |
-| **Maximum**            | 16 MiB (2²⁴ bytes) | keeps `n² / 2¹²⁸ ≤ 2⁻⁸⁸`; fits 24-bit counter; avoids field wrap; spec mandate |
+| **Maximum**            | 16 MB (2²⁴ bytes)  | keeps `n² / 2¹²⁸ ≤ 2⁻⁸⁸`; fits 24-bit counter; avoids field wrap; spec mandate |
 | **Typical sector**     | 512 B–4 KiB        | well inside bound                                                              |
 | **Global tweak space** | 2¹²⁸ sectors       | determined by 128-bit tweak                                                    |
 
@@ -134,6 +134,16 @@ The 16 MiB figure isn’t arbitrary: it’s chosen so that the probability of in
 
 It’s large enough for any realistic “sector” yet small enough to guarantee both mathematical and engineering safety margins.
 
+## What happens beyond 16 MiB?
+
+If you were to encrypt more than 2²⁰ blocks under 1 tweak:
+
+- You’d reuse 
+$\ 𝛼^{i} \$
+ factors beyond the spec’s supported range.
+- If an implementation wraps around, 
+$\ 𝛼^{i} \$
+ values repeat — causing block-tweak collisions, which break XEX’s security assumptions (2 plaintext blocks could share the same whitening factor).
 
 --- 
 
@@ -170,8 +180,6 @@ $\ \frac{n^2}{2^{128}} \$
 , measures the probability that 2 blocks within the same data unit collide in whitening value or otherwise reveal a structural relation.
 
 ---
-
-
 
 ![calculus_01](calculus_01.png)
 
