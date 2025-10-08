@@ -65,7 +65,7 @@ What this implies:
 An attacker who focuses on a small portion of the tweak (e.g., low bits) can spot and exploit repetition much sooner than waiting for full 2¹²⁸ cycles.
 
 
-### The Key Revelation:
+## The Key Revelation:
 The perfect linearity is now visible because:
 
 Each tweak = previous tweak × 2 (in GF(2^128))
