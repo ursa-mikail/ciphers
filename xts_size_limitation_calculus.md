@@ -209,6 +209,48 @@ It provides an engineering margin well above real sector sizes (512 B–4 KiB) w
 ![calculus_01](calculus_01.png)
 
 ---
+## XTS tweak size
+
+The tweak in AES-XTS is 128 bits = 2^128 possible values.
+
+Each tweak typically represents a sector number (a “data unit”).
+
+So, in theory, you can encrypt up to 2^128 distinct sectors under one key.
+
+### Sector size
+
+Each sector has a fixed size (depends on your design):
+
+Common: 512 bytes (old disks) → 2^9 bytes.
+
+Common: 4096 bytes (modern disks) → 2^12 bytes.
+
+### Multiply to get total addressable bytes
+
+For 512-byte sectors:
+
+$\ 2^{128} \$
+x
+$\ 2^{9} \$
+= 
+$\ 2^{137} \$
+ bytes ≈ 1.74 × 10^41 bytes
+
+
+For 4096-byte sectors:
+
+$\ 2^{128} \$
+x
+$\ 2^{12} \$
+= 
+$\ 2^{140} \$
+ bytes ≈ 1.40 × 10^42 bytes
+
+
+The mathematical max addressable space for AES-XTS is 2^140 bytes (≈1.4 × 10^42 bytes) if you use 4096-byte sectors. With 512-byte sectors, it’s 2^137 bytes (≈1.7 × 10^41 bytes).
+
+The practical limit is much lower (16 MiB per sector, enforced by the XTS spec), but the total addressable capacity across all sectors is unimaginably larger than anything you’ll ever hit.
+
 
 
 
