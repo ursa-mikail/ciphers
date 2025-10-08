@@ -155,3 +155,5 @@ If you require absolute non-predictability even if some JSON+tweak pairs are lea
 
 “if an attacker learns 1 tweak, they can compute all future tweaks” is only true if your tweak-derivation is predictable (e.g., an address/counter) or if the secret is compromised.
 
+# xts_tweak_derive.py
+
