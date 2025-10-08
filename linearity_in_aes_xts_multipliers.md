@@ -82,13 +82,13 @@ Hence the XTS rule: the XTS spec limits how many blocks you should use a single 
 
 ### Why This Matters for XTS:
 
-1. Predictability: If an attacker learns one tweak, they can compute all future tweaks
+1. Predictability: If an attacker learns 1 tweak, they can compute all future tweaks
 2. Cycles: The sequence will eventually repeat (after 2^128 steps, but patterns emerge much sooner)
 3. Exploitation: Cryptanalysts can use these linear relationships to attack the encryption
 
 The XTS specification limits operations to ~1 million blocks precisely because this mathematical linearity becomes exploitable at scale, even though the individual operations look "random" to casual observation.
 
-### Practical takeaways / mitigation (simple)
+## Practical takeaways / mitigation (simple)
 
 Don’t rely on “tweak looks random” — it’s not random, it’s linear. Treat it as a deterministic chain.
 
@@ -100,4 +100,58 @@ Authenticate the ciphertext and tweak metadata (HMAC) so tampering is detectable
 
 If you need unpredictability, use a secure random per-block tweak (and store it) or a keyed KDF that produces per-block non-linear values and is not reused.
 
+### One-line demonstration of the exploitability idea
+
+If you know a tweak T0, you can compute T1 = gf_mul_by_x(T0), T2 = gf_mul_by_x(T1), …
+This is cheap and deterministic. That chain means ciphertext patterns in XTS are related across blocks in mathematically tractable ways.
+
+## Caveats on Tweaks
+
+There are 2 separate properties you might want from a tweak and they’re often conflated:
+
+- Uniqueness — tweak must not collide for different records encrypted under the same XTS key.
+
+- Unpredictability — an attacker who observes one (or many) tweak values should not be able to predict other tweaks.
+
+Which one needed depends on the threat model.
+
+## Summary
+
+If you derive the tweak as HMAC(secret_key, canonical_json) then:
+
+	- Unique (probabilistic): yes (very high probability for 128-bit truncation).
+
+	- Unpredictable: yes, unless the attacker learns the HMAC key.
+
+If you use the sector/address (public counter) as the tweak:
+
+	- Unique: yes (if allocator is correct).
+
+	- Unpredictable: no — predictable by design.
+
+If you require both determinism (same JSON → same tweak) and unpredictability to outsiders: use a keyed PRF (HMAC or AES-PRF) with a KMS-held secret key.
+
+If you require absolute non-predictability even if some JSON+tweak pairs are leaked, use a random per-record tweak (store it with ciphertext).
+
+## Threat models and implications
+
+1. Attacker can observe tweaks & ciphertexts, but does not have keys
+
+- A keyed HMAC-derived tweak is safe: observing tweak = HMAC_k(JSON)[:16] does not let the attacker compute HMACs for other JSONs without k.
+
+2. Attacker can choose plaintext/JSONs (chosen-input) but doesn't know the key
+
+- Still safe: HMAC is a secure PRF. They can try different JSONs but cannot predict the keyed output beyond brute force.
+
+3. Attacker obtains one plaintext-tweak pair and the tweak value, and wants to predict tweaks for new JSONs
+
+- If tweak = public address or counter → attacker can predict future tweaks (bad).
+
+- If tweak = HMAC_k(JSON) and k is secret → single observed pair doesn't let them predict others.
+
+4. Key compromise (attacker learns KMS secret)
+
+- Everything that was keyed becomes predictable and decryptable → you must rotate keys and re-encrypt.
+
+“if an attacker learns 1 tweak, they can compute all future tweaks” is only true if your tweak-derivation is predictable (e.g., an address/counter) or if the secret is compromised.
 
