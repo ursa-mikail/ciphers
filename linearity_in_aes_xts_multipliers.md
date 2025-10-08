@@ -157,3 +157,17 @@ If you require absolute non-predictability even if some JSON+tweak pairs are lea
 
 # xts_tweak_derive.py
 
+## Caveats
+
+Never reuse a tweak-key pair for different plaintexts under XTS. Reuse can break confidentiality. If you need to re-encrypt a record, allocate a new tweak or rotate keys.
+
+XTS is not authenticated — always store an authentication tag (HMAC) that covers JSON and ciphertext and verify on decrypt.
+
+Keep keys separate: use different keys for XTS (512-bit) and HMAC (256-bit).
+
+Key compromise mitigation: rotate keys; implement revocation/expiry and re-encryption if possible.
+
+Audit & logging: record allocations if you use a mapping approach so you don’t accidentally reassign tweaks.
+
+HMAC has truncation (32 bytes truncate to 16 bytes). Tweak length = 16 bytes. 
+
