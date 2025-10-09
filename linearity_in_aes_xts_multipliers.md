@@ -155,6 +155,17 @@ If you require absolute non-predictability even if some JSON+tweak pairs are lea
 
 “if an attacker learns 1 tweak, they can compute all future tweaks” is only true if your tweak-derivation is predictable (e.g., an address/counter) or if the secret is compromised.
 
+
+### Threat model matters
+
+Passive attacker / secret key not known: Truncated HMAC is safe — attacker can’t predict or craft colliding HMACs without the key.
+
+Active attacker who can choose inputs but doesn’t know key: still safe.
+
+Key compromise: then all bets are off; collisions and forgery are trivial — you need rotation/compromise handling.
+
+Regulatory / absolute non-collision requirement: use an allocated unique identifier (no probabilistic mapping).
+
 # xts_tweak_derive.py
 
 ## Caveats
@@ -170,4 +181,29 @@ Key compromise mitigation: rotate keys; implement revocation/expiry and re-encry
 Audit & logging: record allocations if you use a mapping approach so you don’t accidentally reassign tweaks.
 
 HMAC has truncation (32 bytes truncate to 16 bytes). Tweak length = 16 bytes. 
+
+- For non-deterministic methods, random tweaks are most common for XTS mode. Store the hex tweak value alongside your ciphertext
+- For deterministic methods, ensure you can reproduce the exact same inputs
+
+### Collision math (quick)
+
+If you truncate an HMAC to 128 bits (16 bytes) you get a space of size 
+$\ 𝑚 = 2^{128} \$
+. By the birthday bound, for 
+𝑁 independent records the collision probability is roughly
+$\ 𝑝 ≈ \frac{N^2}{2m} \$
+
+Numeric examples:
+
+$\ 𝑁 = 10^{6} → 𝑝 ≈ 1.47 × 10^{-27} \$
+
+$\ 𝑁 = 10^{9} → 𝑝 ≈ 1.47 × 10^{-21} \$
+
+$\ 𝑁 = 10^{12} → 𝑝 ≈ 1.47 × 10^{-15} \$
+
+$\ 𝑁 = 10^{18} → 𝑝 ≈ 1.47 × 10^{-3}  (0.15%) \$
+
+So for realistic systems (millions — even billions — of records) collisions in a 128-bit space are astronomically unlikely. But “astronomically unlikely” ≠ “impossible”, and if the policy is “no collisions ever”, we need a different construction.
+
+
 

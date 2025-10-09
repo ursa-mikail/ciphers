@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from cryptography.hazmat.primitives import hashes
 import os
 
-def tweak_from_json_hmac(json_obj, mac_key):
+def tweak_from_json_hmac(json_obj, mac_key): # With truncation
     # canonicalize JSON
     msg = json.dumps(json_obj, sort_keys=True).encode()
     mac = hmac.new(mac_key, msg, hashlib.sha256).digest()   # 32 bytes
@@ -14,7 +14,7 @@ def tweak_from_json_hmac(json_obj, mac_key):
     tweak16 = hk.derive(mac)
     return tweak16
 
-def tweak_from_json(json_obj, mac_key):
+def tweak_from_json(json_obj, mac_key): # With truncation
     # canonicalize JSON
     msg = json.dumps(json_obj, sort_keys=True).encode()
     mac = hmac.new(mac_key, msg, hashlib.sha256).digest()   # 32 bytes
@@ -23,11 +23,11 @@ def tweak_from_json(json_obj, mac_key):
     tweak16 = hk.derive(mac)
     return tweak16
 
-# mac_key lives in KMS; keep it secret
+# mac_key lives in KMS; keep it secret # With truncation
 def derive_tweak_secret(json_obj, mac_key):
     msg = json.dumps(json_obj, sort_keys=True).encode()
     full = hmac.new(mac_key, msg, hashlib.sha256).digest()  # 32B
-    return full[:16], full  # 16B tweak, 32B mac for storage
+    return full[:16], full  # 16B tweak, 32B mac for storage    # truncation
 
 # Non-deterministic, maximally unpredictable
 def tweak_from_random():
@@ -37,7 +37,7 @@ def tweak_from_random():
 def tweak_from_random_nonce(nonce):
     return os.urandom(16)
 
-# Deterministic but avoid leaking mapping if JSON is public: use nonce + HMAC
+# Deterministic but avoid leaking mapping if JSON is public: use nonce + HMAC # With truncation
 def tweak_from_json_hmac_nonce(json_obj, mac_key, nonce):
     # canonicalize JSON
     msg = json.dumps(json_obj, sort_keys=True).encode()
@@ -47,7 +47,7 @@ def tweak_from_json_hmac_nonce(json_obj, mac_key, nonce):
     tweak16 = hk.derive(mac)
     return tweak16
 
-# Use a PRF with secret seed and counter (stream of tweaks)
+# Use a PRF with secret seed and counter (stream of tweaks) # No truncation
 def tweak_from_prf(seed, counter):
     hk = HKDF(length=16, algorithm=hashes.SHA256(), salt=None, info=b'xts-tweak')
     # Combine seed and counter to create unique input
@@ -60,6 +60,123 @@ def print_tweak_hex(tweak, method_name):
     hex_tweak = tweak.hex()
     print(f"{method_name}: {hex_tweak} (length: {len(tweak)} bytes)")
     return hex_tweak
+
+
+import json, os
+from pathlib import Path
+
+# Deterministic mapping + allocated unique sector numbers (zero-collision) 
+def load_mapping(domain):
+    path = Path(f"{domain}_mapping.json")
+    if path.exists():
+        return json.loads(path.read_text())
+    return {"_counter": 0}
+
+def save_mapping(domain, mapping):
+    path = Path(f"{domain}_mapping.json")
+    path.write_text(json.dumps(mapping))
+
+def get_or_allocate_tweak(json_obj, domain): # With truncation
+    mapping = load_mapping(domain)
+    key = json.dumps(json_obj, sort_keys=True)
+    if key in mapping:
+        return bytes.fromhex(mapping[key])
+    counter = mapping["_counter"]
+    tweak = counter.to_bytes(16, "little")
+    """
+    If counter is small (which it will be initially), to_bytes(16, "little") will create a 16-byte array where:
+    The least significant bytes contain the counter value
+
+    The remaining bytes are zero-padded
+    For example:
+    counter = 1 → b'\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    counter = 255 → b'\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+    
+    # only using the first few bytes effectively, which could be a security concern for XTS mode.
+    """
+    mapping[key] = tweak.hex()
+    mapping["_counter"] = counter + 1
+    save_mapping(domain, mapping)
+    return tweak
+
+
+def get_or_allocate_tweak_hash(json_obj, domain):   # With truncation
+    mapping = load_mapping(domain)
+    key = json.dumps(json_obj, sort_keys=True)
+    
+    if key in mapping:
+        return bytes.fromhex(mapping[key])
+    
+    # Use hash to get full 16-byte tweak
+    tweak = hashlib.sha256(key.encode()).digest()[:16]
+    mapping[key] = tweak.hex()
+    save_mapping(domain, mapping)
+    return tweak
+
+def get_or_allocate_tweak_counter(json_obj, domain):    # With truncation
+    mapping = load_mapping(domain)
+    key = json.dumps(json_obj, sort_keys=True)
+    
+    if key in mapping:
+        return bytes.fromhex(mapping[key])
+    
+    counter = mapping["_counter"]
+    # Use counter across all bytes
+    tweak = b''
+    for i in range(16):
+        tweak += ((counter >> (8 * i)) & 0xFF).to_bytes(1, 'little')
+    
+    mapping[key] = tweak.hex()
+    mapping["_counter"] = counter + 1
+    save_mapping(domain, mapping)
+    return tweak
+
+
+def get_or_allocate_tweak_hmac(json_obj, domain, secret_key=b'your-secret-key'): # No truncation
+    mapping = load_mapping(domain)
+    key = json.dumps(json_obj, sort_keys=True)
+    
+    if key in mapping:
+        return bytes.fromhex(mapping[key])
+    
+    # Use HMAC to derive tweak
+    h = hmac.new(secret_key, key.encode(), hashlib.sha256)
+    tweak = h.digest()[:16]
+    
+    mapping[key] = tweak.hex()
+    save_mapping(domain, mapping)
+    return tweak
+
+def demonstrate_usage():
+    from cryptography.hazmat.primitives.ciphers import Cipher, modes
+    from cryptography.hazmat.primitives.ciphers.algorithms import AES
+    from cryptography.hazmat.backends import default_backend
+    
+    # Your encryption key (should be 32 or 64 bytes for XTS)
+    encryption_key = os.urandom(32)
+    
+    # Example data to encrypt
+    data = b"Hello, World! This is a test message."
+    json_context = {"file_id": "file123", "sector": 0}
+    domain = "myapp"
+    
+    # Using Option 1 (Hash-based - recommended)
+    tweak1 = get_or_allocate_tweak_hash(json_context, domain)
+    cipher1 = Cipher(AES(encryption_key), modes.XTS(tweak1), backend=default_backend())
+    encryptor1 = cipher1.encryptor()
+    encrypted1 = encryptor1.update(data) + encryptor1.finalize()
+    
+    # Using Option 3 (HMAC-based - most secure)
+    tweak3 = get_or_allocate_tweak_hmac(json_context, domain)
+    cipher3 = Cipher(AES(encryption_key), modes.XTS(tweak3), backend=default_backend())
+    encryptor3 = cipher3.encryptor()
+    encrypted3 = encryptor3.update(data) + encryptor3.finalize()
+    
+    print(f"Original data: {data}")
+    print(f"Tweak1 (Hash): {tweak1.hex()}")
+    print(f"Tweak3 (HMAC): {tweak3.hex()}")
+    print(f"Encrypted1 length: {len(encrypted1)}")
+    print(f"Encrypted3 length: {len(encrypted3)}")
 
 # Demo usage
 if __name__ == "__main__":
@@ -132,46 +249,53 @@ if __name__ == "__main__":
     print(f"5. Tweak+MAC: tweak_hex = '{tweak_hex}', mac_hex = '{mac_hex}'")
     print("="*40)
 
+    demonstrate_usage()
+
 """
 XTS Tweak Derivation Methods
 ========================================
-MAC Key: 94751275a431275ab77fb3fbcc402d82ae92be29a5449ece353703495dd586ae
+MAC Key: f180ee0c4a011866ff2f023eb4e386b3d327d7454ce711c3a5039de7bc2984e4
 JSON Object: {'file_id': 'doc_12345', 'sector': 0, 'timestamp': '2024-01-15T10:30:00Z'}
 
 1. Random Tweak (Non-deterministic):
-Random tweak: 5875dcacf75d8c486307e14e3ba92ccd (length: 16 bytes)
+Random tweak: a9ec4ba9458be937de55054c86c10b48 (length: 16 bytes)
    → Store this hex value with your ciphertext
 
 2. JSON-based Deterministic Tweak:
-JSON-based tweak: 3d66b99353fdc1e519c53665e3febc25 (length: 16 bytes)
+JSON-based tweak: 671fbc0af2d770603204fe207b6b8656 (length: 16 bytes)
    → Same JSON + same key = same tweak
 
 3. JSON-based with Nonce:
-JSON+nonce tweak: 5236506be323872630e515447457b257 (length: 16 bytes)
-   Nonce: 6234584f9870e9b61232f23709072f16
+JSON+nonce tweak: 9c36c6e6408acae7ea564c752f960f50 (length: 16 bytes)
+   Nonce: 40988f19d40ce883ca045aca0b93cf22
    → Same JSON + different nonce = different tweak
 
 4. PRF-based Sequential Tweaks:
-PRF tweak #0: 7e87fa510ebb6843f15c6bf7a670e813 (length: 16 bytes)
-PRF tweak #1: aeecc520494ff8fa3aae183bb6d0f9a9 (length: 16 bytes)
-PRF tweak #2: 0ab7473591d36732d77935793ad0b35e (length: 16 bytes)
-   Seed: 4a0d96fba44d02d40dc1980cab7739c316007fe864378aa55fd2fd506bbc2cab
+PRF tweak #0: 4fcefc96d72d2656ac3c3e89f044dede (length: 16 bytes)
+PRF tweak #1: 0273768a1617907c3c49aa0d38e59358 (length: 16 bytes)
+PRF tweak #2: 8d7eae7578c89f748aa53d8ad339e9dd (length: 16 bytes)
+   Seed: 96af68bca4f4df2cd4111e609c645ef7c03b1b8ac8402fe763650bed53c7e988
    → Deterministic sequence from seed + counter
 
 5. Tweak with MAC Storage:
-Tweak portion: 1327025ee0dabbd0bbfe2baf0fd31e54 (length: 16 bytes)
-Full MAC: 1327025ee0dabbd0bbfe2baf0fd31e54612324e6eb8e36b6b91b826404c36ebf (length: 32 bytes)
+Tweak portion: 6558926a4408fdbd11d1373ef727616c (length: 16 bytes)
+Full MAC: 6558926a4408fdbd11d1373ef727616c2d848d5a10fb148425eb15c1358d4674 (length: 32 bytes)
    → Store MAC for verification, use tweak for XTS
 
 6. Verification Example:
    MAC verification: True
-   Computed tweak: 1327025ee0dabbd0bbfe2baf0fd31e54
+   Computed tweak: 6558926a4408fdbd11d1373ef727616c
 
 ========================================
 Summary of stored values for each method:
-1. Random:    tweak_hex = '5875dcacf75d8c486307e14e3ba92ccd'
-2. JSON:      tweak_hex = '3d66b99353fdc1e519c53665e3febc25'
-3. JSON+Nonce: tweak_hex = '5236506be323872630e515447457b257', nonce_hex = '6234584f9870e9b61232f23709072f16'
-5. Tweak+MAC: tweak_hex = '1327025ee0dabbd0bbfe2baf0fd31e54', mac_hex = '1327025ee0dabbd0bbfe2baf0fd31e54612324e6eb8e36b6b91b826404c36ebf'
+1. Random:    tweak_hex = 'a9ec4ba9458be937de55054c86c10b48'
+2. JSON:      tweak_hex = '671fbc0af2d770603204fe207b6b8656'
+3. JSON+Nonce: tweak_hex = '9c36c6e6408acae7ea564c752f960f50', nonce_hex = '40988f19d40ce883ca045aca0b93cf22'
+5. Tweak+MAC: tweak_hex = '6558926a4408fdbd11d1373ef727616c', mac_hex = '6558926a4408fdbd11d1373ef727616c2d848d5a10fb148425eb15c1358d4674'
 ========================================
+Original data: b'Hello, World! This is a test message.'
+Tweak1 (Hash): 5159db2c43b322f2a25346b44f739044
+Tweak3 (HMAC): 5159db2c43b322f2a25346b44f739044
+Encrypted1 length: 37
+Encrypted3 length: 37
 """
