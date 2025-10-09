@@ -252,9 +252,7 @@ The mathematical max addressable space for AES-XTS is 2^140 bytes (≈1.4 × 10^
 The practical limit is much lower (16 MiB per sector, enforced by the XTS spec), but the total addressable capacity across all sectors is unimaginably larger than anything you’ll ever hit.
 
 
+## Reference(s)
 
-
-$\ 2^{20} \$
-
-
+[birthday_paradox](https://github.com/ursa-mikail/birthday_paradox)
 
