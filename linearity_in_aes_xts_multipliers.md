@@ -206,5 +206,12 @@ $\ 𝑁 = 10^{18} → 𝑝 ≈ 1.47 × 10^{-3}  (0.15%) \$
 So for realistic systems (millions — even billions — of records) collisions in a 128-bit space are astronomically unlikely. But “astronomically unlikely” ≠ “impossible”, and if the policy is “no collisions ever”, we need a different construction.
 
 
+# Notes
 
+The XTS specification limits operations to about 2^20 (roughly 1 million) blocks per key because:
+
+1. Finite Field Structure: GF(2^128) has only 2^128 elements, creating inevitable cycles
+2. Linear Relationships: Repeated multiplication creates predictable patterns
+3. Cryptanalytic Vulnerability: These patterns can be exploited to recover information about plaintexts
+4. Birthday Paradox: With enough operations, collisions and patterns become statistically likely
 
